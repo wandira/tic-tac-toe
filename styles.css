@@ -5,3 +5,13 @@ body {
 .title {
     color: rgb(39, 22, 114);
 }
+
+@keyframes fadein {
+    from {
+      opacity: 0;
+    }
+  
+    to {
+      opacity: 1;
+    }
+  }

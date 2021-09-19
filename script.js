@@ -21,6 +21,23 @@ const ticTacToeGame = (function(){
         }
         function initializeBoardDOM(){
             //init semua base html buat boardnya dan h1 prompt nya
+            const main = document.getElementById('main')
+            main.setAttribute('style', `background: white;
+                                        display: grid;
+                                        grid-gap: 1px;
+                                        grid-template-columns: repeat(3, 1fr);
+                                        height: 80vh;
+                                        width: 80vh`)
+            for(let i=0; i<=8; i++){
+                setTimeout(()=>{
+                    const box = document.createElement('div')
+                    box.dataset.number = i
+                    box.setAttribute('style', `background: #ffd9e5; 
+                                                border: 1px solid black; 
+                                                animation: 1s linear fadein;`)
+                    main.appendChild(box)
+                }, 250 + (i*120))
+            }
         }
         function win(marker){
             //update h1 prompt jadi    `${marker} wins!`
@@ -68,7 +85,11 @@ const ticTacToeGame = (function(){
             ]
 
             function checkIsTie(){
-                if(/*gameBoard isinya semua tidak null*/gameBoard[0]){
+                const gameBoardHasNull = gameBoard.some(item =>{
+                    return item == null
+                })
+
+                if(!gameBoardHasNull){
                     display.tie()
                 }
             }

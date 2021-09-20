@@ -1,5 +1,9 @@
 # Tic Tac Toe Changelog
 
+## [2.0.0] - 2021-09-20
+### Added
+- Add versus computer
+
 ## [1.1.0] - 2021-09-20
 ### Added
 - Choose opponent modal

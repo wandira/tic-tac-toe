@@ -2,8 +2,16 @@ const ticTacToeGame = (function(){
     let gameBoard = [null, null, null,
                      null, null, null,
                      null, null, null]
-    
-    let currentMarker = 'O'
+
+    let players = []
+
+    let currentPlayer = null
+
+    let currentMarker = currentPlayer?.getMarker() || 'F'
+
+    let hasWinner = false
+
+    let isTie = false
         
     const display = (function(){
 
@@ -69,7 +77,16 @@ const ticTacToeGame = (function(){
         }
 
         function win(){
-            updatePrompt(`${ currentMarker == 'O' ? 'X' : 'O'} WINS!`)
+            function getWinnerName(){ // get previous player, not current player
+                if(currentPlayer.getMarker() == players[0].getMarker()){
+                    return players[1].getName()
+                }
+                else{
+                    return players[0].getName()
+                }
+            }
+
+            updatePrompt(`${getWinnerName()} WINS!`)
 
             const boxes = document.querySelectorAll(`[data-number]`)
             boxes.forEach(box => {
@@ -94,7 +111,7 @@ const ticTacToeGame = (function(){
             const pvp = document.createElement('button')
             const pvc = document.createElement('button')
             pvp.textContent = "Player vs Player"
-            pvc.textContent = "Player vs COM (Coming soon)"
+            pvc.textContent = "Player vs COM"
             
             pvp.classList.add('customHover');
             pvp.setAttribute('style', ` display: flex;
@@ -118,16 +135,23 @@ const ticTacToeGame = (function(){
                                         height: 60px;
                                         width: 200px;`)
 
-            pvp.addEventListener('click',onChooseOpponent)
-            pvc.addEventListener('click',onChooseOpponent)
-            pvc.disabled = true
+            pvp.addEventListener('click',playerVsPlayer)
+            pvc.addEventListener('click',playerVsCom)
+
             chooseDiv.appendChild(pvp)
             chooseDiv.appendChild(pvc)
 
             chooseOpponentModal.appendChild(chooseDiv)
 
-            function onChooseOpponent(){
-                logic.startGame()
+            function playerVsPlayer(){
+                logic.startVersusPlayer()
+                setTimeout(()=>{
+                    chooseOpponentModal.style.visibility = "hidden";
+                },200)
+            }
+
+            function playerVsCom(){
+                logic.startVersusCom()
                 setTimeout(()=>{
                     chooseOpponentModal.style.visibility = "hidden";
                 },200)
@@ -138,36 +162,34 @@ const ticTacToeGame = (function(){
             const chooseOpponentModal = document.getElementById('chooseOpponentModal')
             chooseOpponentModal.style.visibility = "visible";
         }
-        return { initializeBoardDOM, initializeChooseOpponentModal, initializeRestartBtn, openChooseOpponentModal   , fillBox, updatePrompt, win, tie }
+        return { initializeBoardDOM, initializeChooseOpponentModal, initializeRestartBtn, openChooseOpponentModal, fillBox, updatePrompt, win, tie }
     })()
 
     const logic = (function(){
 
-        function startGame(){
-            gameBoard = [null, null, null,
-                null, null, null,
-                null, null, null]
-            display.initializeBoardDOM()
-            display.initializeRestartBtn()
-            display.updatePrompt(`${currentMarker}'s move`)
-        }
-
         function restartGame(){
+            isTie = false
+            hasWinner = false
             display.openChooseOpponentModal()
         }
 
         function boxClicked(boxNumber){
+            currentMarker = currentPlayer.getMarker()
+
             gameBoard[boxNumber] = currentMarker
             display.fillBox(boxNumber)
 
-            if(currentMarker == 'O'){
-                currentMarker = 'X'
+            if(currentPlayer.getMarker == players[0].getMarker){
+                currentPlayer = players[1]
             } else {
-                currentMarker = 'O'
+                currentPlayer = players[0]
             }
-            display.updatePrompt(`${currentMarker}'s move`)
+
+            display.updatePrompt(`${currentPlayer.getName()}'s move`)
 
             checkIfWin()
+
+            computerWillMakeMoveIfAllowed()
         }
 
         function checkIfWin(){
@@ -183,6 +205,7 @@ const ticTacToeGame = (function(){
                 })
 
                 if(!gameBoardHasNull){
+                    isTie = true
                     display.tie()
                 }
             }
@@ -193,6 +216,7 @@ const ticTacToeGame = (function(){
                 if( gameBoard[arr[0]]  // if bukan null dan semua sama
                     && (gameBoard[arr[0]] == gameBoard[arr[1]])
                     && (gameBoard[arr[1]] == gameBoard[arr[2]])){
+                    hasWinner = true
                     display.win()
                     checkForTie = false
                 }
@@ -203,9 +227,58 @@ const ticTacToeGame = (function(){
             }
         }
 
-        return { startGame, restartGame, boxClicked }
+        function startGame(){
+            gameBoard = [null, null, null,
+                null, null, null,
+                null, null, null]
+            display.initializeBoardDOM()
+            display.initializeRestartBtn()
+            display.updatePrompt(`${currentPlayer.getName()}'s move`)
+        }
+
+        function startVersusPlayer(){
+            players[0] = PlayerFactory("Player 1",false,'O')
+            players[1] = PlayerFactory("Player 2",false,'X')
+
+            currentPlayer = players[0]
+
+            startGame()
+        }
+
+        function startVersusCom(){
+            //add randomizer index here later
+            players[0] = PlayerFactory("Player",false,'O')
+            players[1] = PlayerFactory("COM",true,'X')
+
+            currentPlayer = players[0]
+
+            startGame()
+            computerWillMakeMoveIfAllowed()
+        }
+
+        function computerWillMakeMoveIfAllowed(){
+            if(!hasWinner && !isTie && currentPlayer.getIsCom()){
+                let boxNumber
+                do {
+                    boxNumber = Math.floor(Math.random() * 9);
+                } while (gameBoard[boxNumber]); // while true => boxnya udah ada isinya
+
+                setTimeout(()=>{
+                    boxClicked(boxNumber)
+                },1000)
+            }
+        }
+
+        return { restartGame, boxClicked, startVersusPlayer, startVersusCom }
 
     })()
+
+    function PlayerFactory(name,isCom,marker){
+        function getName(){ return name }
+        function getIsCom(){ return isCom }
+        function getMarker(){ return marker }
+        return { getName, getIsCom, getMarker }
+    }
 
     function start (){
         console.log("game is starting");

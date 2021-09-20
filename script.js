@@ -67,7 +67,12 @@ const ticTacToeGame = (function(){
         }
 
         function boxClickEvent (e) {
-            logic.boxClicked(e.target.dataset.number) 
+            if(!currentPlayer.getIsCom()){
+                logic.boxClicked(e.target.dataset.number) 
+            } else {
+                const box = document.querySelector(`[data-number="${e.target.dataset.number}"]`)
+                box.addEventListener('click', boxClickEvent, { once: true }) //reattach event
+            }
         }
 
         function updatePrompt (string){

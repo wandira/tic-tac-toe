@@ -1,3 +1,191 @@
+const minimaxModule = (function(){
+    let board 
+    function setBoardForMinimax(gameboard) {
+        board = [
+            [ gameboard[0], gameboard[1], gameboard[2] ],
+            [ gameboard[3], gameboard[4], gameboard[5] ],
+            [ gameboard[6], gameboard[7], gameboard[8] ]
+        ]
+    }
+
+    function getBoard() {
+        return board
+    }
+
+    // This minimax code is contributed by rag2127
+    //https://www.geeksforgeeks.org/minimax-algorithm-in-game-theory-set-3-tic-tac-toe-ai-finding-optimal-move/
+    
+    // Javascript program to find the
+    // next optimal move for a player
+    class Move
+    {
+        constructor()
+        {
+            let row,col;
+        }
+    }
+
+    let player = 'X', opponent = 'O';
+
+    function isMovesLeft(board)
+    {
+        for(let i = 0; i < 3; i++)
+            for(let j = 0; j < 3; j++)
+                if (board[i][j] == null)
+                    return true;
+                    
+        return false;
+    }
+
+    function evaluate(b)
+    {
+        
+        // Checking for Rows for X or O victory.
+        for(let row = 0; row < 3; row++)
+        {
+            if (b[row][0] == b[row][1] &&
+                b[row][1] == b[row][2])
+            {
+                if (b[row][0] == player)
+                    return +10;
+                    
+                else if (b[row][0] == opponent)
+                    return -10;
+            }
+        }
+
+        // Checking for Columns for X or O victory.
+        for(let col = 0; col < 3; col++)
+        {
+            if (b[0][col] == b[1][col] &&
+                b[1][col] == b[2][col])
+            {
+                if (b[0][col] == player)
+                    return +10;
+
+                else if (b[0][col] == opponent)
+                    return -10;
+            }
+        }
+
+        // Checking for Diagonals for X or O victory.
+        if (b[0][0] == b[1][1] && b[1][1] == b[2][2])
+        {
+            if (b[0][0] == player)
+                return +10;
+                
+            else if (b[0][0] == opponent)
+                return -10;
+        }
+
+        if (b[0][2] == b[1][1] &&
+            b[1][1] == b[2][0])
+        {
+            if (b[0][2] == player)
+                return +10;
+                
+            else if (b[0][2] == opponent)
+                return -10;
+        }
+        return 0;
+    }
+
+    function minimax(board, depth, isMax)
+    {
+        let score = evaluate(board);
+
+        if (score == 10)
+            return score;
+
+        if (score == -10)
+            return score;
+
+        if (isMovesLeft(board) == false)
+            return 0;
+
+        if (isMax)
+        {
+            let best = -1000;
+
+            for(let i = 0; i < 3; i++)
+            {
+                for(let j = 0; j < 3; j++)
+                {
+                    if (board[i][j]==null)
+                    {
+                        board[i][j] = player;
+                        best = Math.max(best, minimax(board,
+                                        depth + 1, !isMax));
+                        board[i][j] = null;
+                    }
+                }
+            }
+            return best;
+        }
+
+        else
+        {
+            let best = 1000;
+
+            for(let i = 0; i < 3; i++)
+            {
+                for(let j = 0; j < 3; j++)
+                {
+                    if (board[i][j] == null)
+                    {
+                        board[i][j] = opponent;
+                        best = Math.min(best, minimax(board,
+                                        depth + 1, !isMax));
+                        board[i][j] = null;
+                    }
+                }
+            }
+            return best;
+        }
+    }
+
+    function findBestMove(board)
+    {
+        let bestVal = -1000;
+        let bestMove = new Move();
+        bestMove.row = -1;
+        bestMove.col = -1;
+
+        for(let i = 0; i < 3; i++)
+        {
+            for(let j = 0; j < 3; j++)
+            {
+                
+                if (board[i][j] == null)
+                {
+                    board[i][j] = player;
+
+                    let moveVal = minimax(board, 0, false);
+
+                    board[i][j] = null;
+
+                    if (moveVal > bestVal)
+                    {
+                        bestMove.row = i;
+                        bestMove.col = j;
+                        bestVal = moveVal;
+                    }
+                }
+            }
+        }
+
+        return bestMove;
+    }
+
+
+    function getBestBox(){
+        let bestMove = board ? findBestMove(board) : {}
+        return ((bestMove.row)*3) + bestMove.col
+    }
+
+    return { setBoardForMinimax, getBestBox, getBoard }
+})()
+
 const ticTacToeGame = (function(){
     let gameBoard = [null, null, null,
                      null, null, null,
@@ -12,6 +200,10 @@ const ticTacToeGame = (function(){
     let hasWinner = false
 
     let isTie = false
+
+    let isMinimax = false
+
+    const { setBoardForMinimax, getBestBox, getBoard } = minimaxModule
         
     const display = (function(){
 
@@ -115,8 +307,10 @@ const ticTacToeGame = (function(){
 
             const pvp = document.createElement('button')
             const pvc = document.createElement('button')
+            const pvm = document.createElement('button')
             pvp.textContent = "Player vs Player"
             pvc.textContent = "Player vs COM"
+            pvm.textContent = "Player vs Minimax"
             
             pvp.classList.add('customHover');
             pvp.setAttribute('style', ` display: flex;
@@ -139,12 +333,25 @@ const ticTacToeGame = (function(){
                                         animation: 1s linear fadein;
                                         height: 60px;
                                         width: 200px;`)
+        
+            pvm.classList.add('customHover');
+            pvm.setAttribute('style', ` display: flex;
+                                        font-size: larger;
+                                        align-items: center;
+                                        justify-content: center;
+                                        background: #FFa8e4; 
+                                        border: 1px solid black;
+                                        animation: 1s linear fadein;
+                                        height: 60px;
+                                        width: 200px;`)
 
             pvp.addEventListener('click',playerVsPlayer)
             pvc.addEventListener('click',playerVsCom)
+            pvm.addEventListener('click',playerVsMinimax)
 
             chooseDiv.appendChild(pvp)
             chooseDiv.appendChild(pvc)
+            chooseDiv.appendChild(pvm)
 
             chooseOpponentModal.appendChild(chooseDiv)
 
@@ -157,6 +364,13 @@ const ticTacToeGame = (function(){
 
             function playerVsCom(){
                 logic.startVersusCom()
+                setTimeout(()=>{
+                    chooseOpponentModal.style.visibility = "hidden";
+                },200)
+            }
+
+            function playerVsMinimax(){
+                logic.startVersusCom(true)
                 setTimeout(()=>{
                     chooseOpponentModal.style.visibility = "hidden";
                 },200)
@@ -175,6 +389,7 @@ const ticTacToeGame = (function(){
         function restartGame(){
             isTie = false
             hasWinner = false
+            isMinimax = false
             display.openChooseOpponentModal()
         }
 
@@ -250,12 +465,14 @@ const ticTacToeGame = (function(){
             startGame()
         }
 
-        function startVersusCom(){
+        function startVersusCom(minimax=false){
             //add randomizer index here later
             players[0] = PlayerFactory("Player",false,'O')
             players[1] = PlayerFactory("COM",true,'X')
 
             currentPlayer = players[0]
+
+            isMinimax = minimax
 
             startGame()
             computerWillMakeMoveIfAllowed()
@@ -263,14 +480,24 @@ const ticTacToeGame = (function(){
 
         function computerWillMakeMoveIfAllowed(){
             if(!hasWinner && !isTie && currentPlayer.getIsCom()){
-                let boxNumber
-                do {
-                    boxNumber = Math.floor(Math.random() * 9);
-                } while (gameBoard[boxNumber]); // while true => boxnya udah ada isinya
-
-                setTimeout(()=>{
-                    boxClicked(boxNumber)
-                },1000)
+                if(isMinimax){
+                    setBoardForMinimax(gameBoard)
+                    console.log("board",getBoard())
+                    console.log("best box",getBestBox())
+                    setTimeout(()=>{
+                        boxClicked(getBestBox())
+                    },1000)
+    
+                } else {
+                        let boxNumber
+                        do {
+                            boxNumber = Math.floor(Math.random() * 9);
+                        } while (gameBoard[boxNumber]); // while true => boxnya udah ada isinya
+        
+                        setTimeout(()=>{
+                            boxClicked(boxNumber)
+                        },1000)
+                }
             }
         }
 

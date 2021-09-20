@@ -1,5 +1,9 @@
 # Tic Tac Toe Changelog
 
+## [3.0.0] - 2021-09-20
+### Added
+- Add versus minimax
+
 ## [2.0.1] - 2021-09-20
 ### Fixed
 - Click behavior during COM's turn

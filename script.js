@@ -4,53 +4,95 @@ const ticTacToeGame = (function(){
                      null, null, null]
     
     let currentMarker = 'O'
-
+        
     const display = (function(){
-        function startScreen(){
-            updateBoardDisplay()
+        function startScreen(){ //remove markers from all box
+            const boxes = document.querySelectorAll(`[data-number]`)
+            boxes.forEach(box => {
+                while (box.firstChild) {
+                    box.removeChild(box.firstChild);
+                }
+            })
+            updatePrompt(`${ currentMarker }'s move`)
         }
-        function fillBox(marker,boxNumber){
-            updateBoardDisplay(marker,boxNumber)
+
+        function fillBox(boxNumber){
+            const XorO = document.createElement('span')
+            XorO.textContent = currentMarker
+            XorO.setAttribute('style', `font-size: 80px`)
+            const box = document.querySelector(`[data-number="${boxNumber}"]`)
+            box.append(XorO)
         }
-        function updateBoardDisplay(marker=null, boxNumber=null){
-            if(boxNumber){
-                //update dom 1 box aja
-            } else {
-                //kosongin isi semua box di dom
-            }
-        }
+
         function initializeBoardDOM(){
-            //init semua base html buat boardnya dan h1 prompt nya
-            const main = document.getElementById('main')
-            main.setAttribute('style', `background: white;
-                                        display: grid;
-                                        grid-gap: 1px;
-                                        grid-template-columns: repeat(3, 1fr);
-                                        height: 80vh;
-                                        width: 80vh`)
+            const board = document.getElementById('board')
+            while (board.firstChild) { //empty the board div from boxes
+                board.removeChild(board.firstChild);
+            }
+            board.setAttribute('style', `   background: white;
+                                            display: grid;
+                                            grid-gap: 1px;
+                                            grid-template-columns: repeat(3, 1fr);
+                                            grid-template-rows: repeat(3, 1fr);
+                                            height: 50vh;
+                                            width: 50vh`)
+                                        
             for(let i=0; i<=8; i++){
                 setTimeout(()=>{
                     const box = document.createElement('div')
                     box.dataset.number = i
-                    box.setAttribute('style', `background: #ffd9e5; 
+                    box.addEventListener('click', boxClickEvent, { once: true })
+                    box.classList.add('customHover');
+                    box.setAttribute('style', ` background: #e6e6ff; 
                                                 border: 1px solid black; 
-                                                animation: 1s linear fadein;`)
-                    main.appendChild(box)
-                }, 250 + (i*120))
+                                                animation: 1s linear fadein;
+                                                display: flex;
+                                                align-items: center;
+                                                justify-content: center;`)
+                    board.appendChild(box)
+                }, 70 + (i*20))
             }
         }
-        function win(marker){
-            //update h1 prompt jadi    `${marker} wins!`
-            //hilangin semua event listener di dom
-            //munculin tombol reset , event logic.startGame <--satu-satunya listener
-        }
-        function tie(){
-            //update h1 prompt jadi    `It's a tie!`
-            //hilangin semua event listener di dom
-            //munculin tombol reset , event logic.startGame <--satu-satunya listener
+
+        function initializeRestartBtn(){
+            const p = document.getElementById('grandparent')
+            const restartBtn = document.createElement('button')
+            restartBtn.addEventListener('click', logic.restartGame)
+            restartBtn.textContent = 'RESTART'
+            restartBtn.classList.add('customHover');
+            restartBtn.setAttribute('style', `  background-color: #ffc2f8  ; 
+                                                border: 1px solid black; 
+                                                border-radius: 4px;
+                                                animation: 1s linear fadein; 
+                                                height: 50px; width: 150px;
+                                                margin-top: 50px`)
+            p.appendChild(restartBtn)
         }
 
-        return { startScreen, fillBox, win, tie, initializeBoardDOM }
+        function boxClickEvent (e) {
+            logic.boxClicked(e.target.dataset.number) 
+        }
+
+        function updatePrompt (string){
+            const prompt = document.getElementById('prompt')
+            prompt.setAttribute('style', `animation: 1s linear fadein;`)
+            prompt.textContent = string
+        }
+
+        function win(){
+            updatePrompt(`${ currentMarker == 'O' ? 'X' : 'O'} WINS!`)
+
+            const boxes = document.querySelectorAll(`[data-number]`)
+            boxes.forEach(box => {
+                    box.removeEventListener('click',boxClickEvent);
+            })
+        }
+
+        function tie(){
+            updatePrompt(`It's a TIE!`)
+        }
+
+        return { startScreen, fillBox, updatePrompt, win, tie, initializeBoardDOM, initializeRestartBtn }
     })()
 
     const logic = (function(){
@@ -61,20 +103,23 @@ const ticTacToeGame = (function(){
             display.startScreen()
         }
 
+        function restartGame(){
+            display.initializeBoardDOM()
+            startGame()
+        }
+
         function boxClicked(boxNumber){
-            if(!gameBoard[boxNumber]){ //if box is null
+            gameBoard[boxNumber] = currentMarker
+            display.fillBox(boxNumber)
 
-                gameBoard[boxNumber] = currentMarker
-                display.fillBox(currentMarker,boxNumber)
-
-                if(currentMarker == 'O'){
-                    currentMarker = 'X'
-                } else {
-                    currentMarker = 'O'
-                }
-
-                checkIfWin()
+            if(currentMarker == 'O'){
+                currentMarker = 'X'
+            } else {
+                currentMarker = 'O'
             }
+            display.updatePrompt(`${currentMarker}'s move`)
+
+            checkIfWin()
         }
 
         function checkIfWin(){
@@ -94,20 +139,27 @@ const ticTacToeGame = (function(){
                 }
             }
 
+            let checkForTie = true
+
             winningCombination.forEach((arr)=>{
-                if(gameBoard[arr[0]] && (gameBoard[arr[0]]==gameBoard[arr[1]]==gameBoard[arr[2]])){ // if bukan null dan semua sama
+                if( gameBoard[arr[0]]  // if bukan null dan semua sama
+                    && (gameBoard[arr[0]] == gameBoard[arr[1]])
+                    && (gameBoard[arr[1]] == gameBoard[arr[2]])){
                     display.win()
-                    return //jangan checkIsTie
+                    checkForTie = false
                 }
             })
-            checkIsTie()
+            
+            if(checkForTie){
+                checkIsTie()
+            }
         }
 
-        return { startGame, boxClicked }
+        return { startGame, restartGame, boxClicked }
 
     })()
 
-    return { start: () => { console.log("game is starting"); display.initializeBoardDOM(); logic.startGame() } }
+    return { start: () => { console.log("game is starting"); display.initializeBoardDOM(); display.initializeRestartBtn(); logic.startGame() } }
 })()
 
 

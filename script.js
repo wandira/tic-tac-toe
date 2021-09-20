@@ -6,15 +6,6 @@ const ticTacToeGame = (function(){
     let currentMarker = 'O'
         
     const display = (function(){
-        function startScreen(){ //remove markers from all box
-            const boxes = document.querySelectorAll(`[data-number]`)
-            boxes.forEach(box => {
-                while (box.firstChild) {
-                    box.removeChild(box.firstChild);
-                }
-            })
-            updatePrompt(`${ currentMarker }'s move`)
-        }
 
         function fillBox(boxNumber){
             const XorO = document.createElement('span')
@@ -55,8 +46,7 @@ const ticTacToeGame = (function(){
         }
 
         function initializeRestartBtn(){
-            const p = document.getElementById('grandparent')
-            const restartBtn = document.createElement('button')
+            const restartBtn = document.getElementById('restartBtn')
             restartBtn.addEventListener('click', logic.restartGame)
             restartBtn.textContent = 'RESTART'
             restartBtn.classList.add('customHover');
@@ -66,7 +56,6 @@ const ticTacToeGame = (function(){
                                                 animation: 1s linear fadein; 
                                                 height: 50px; width: 150px;
                                                 margin-top: 50px`)
-            p.appendChild(restartBtn)
         }
 
         function boxClickEvent (e) {
@@ -92,20 +81,79 @@ const ticTacToeGame = (function(){
             updatePrompt(`It's a TIE!`)
         }
 
-        return { startScreen, fillBox, updatePrompt, win, tie, initializeBoardDOM, initializeRestartBtn }
+        function initializeChooseOpponentModal(){
+            const chooseOpponentModal = document.getElementById('chooseOpponentModal')
+
+            const chooseDiv = document.createElement('div')
+            chooseDiv.setAttribute('style', `   align-items: center;
+                                                display: flex;
+                                                flex-direction: column;
+                                                justify-content: space-evenly;
+                                                height: 300px;`)
+
+            const pvp = document.createElement('button')
+            const pvc = document.createElement('button')
+            pvp.textContent = "Player vs Player"
+            pvc.textContent = "Player vs COM (Coming soon)"
+            
+            pvp.classList.add('customHover');
+            pvp.setAttribute('style', ` display: flex;
+                                        font-size: larger;
+                                        align-items: center;
+                                        justify-content: center;
+                                        background: #e6e6ff; 
+                                        border: 1px solid black; 
+                                        animation: 1s linear fadein;
+                                        height: 60px;
+                                        width: 200px;`)
+
+            pvc.classList.add('customHover');
+            pvc.setAttribute('style', ` display: flex;
+                                        font-size: larger;
+                                        align-items: center;
+                                        justify-content: center;
+                                        background: #95a8e4; 
+                                        border: 1px solid black;
+                                        animation: 1s linear fadein;
+                                        height: 60px;
+                                        width: 200px;`)
+
+            pvp.addEventListener('click',onChooseOpponent)
+            pvc.addEventListener('click',onChooseOpponent)
+            pvc.disabled = true
+            chooseDiv.appendChild(pvp)
+            chooseDiv.appendChild(pvc)
+
+            chooseOpponentModal.appendChild(chooseDiv)
+
+            function onChooseOpponent(){
+                logic.startGame()
+                setTimeout(()=>{
+                    chooseOpponentModal.style.visibility = "hidden";
+                },200)
+            }
+        }
+
+        function openChooseOpponentModal(){
+            const chooseOpponentModal = document.getElementById('chooseOpponentModal')
+            chooseOpponentModal.style.visibility = "visible";
+        }
+        return { initializeBoardDOM, initializeChooseOpponentModal, initializeRestartBtn, openChooseOpponentModal   , fillBox, updatePrompt, win, tie }
     })()
 
     const logic = (function(){
+
         function startGame(){
             gameBoard = [null, null, null,
                 null, null, null,
                 null, null, null]
-            display.startScreen()
+            display.initializeBoardDOM()
+            display.initializeRestartBtn()
+            display.updatePrompt(`${currentMarker}'s move`)
         }
 
         function restartGame(){
-            display.initializeBoardDOM()
-            startGame()
+            display.openChooseOpponentModal()
         }
 
         function boxClicked(boxNumber){
@@ -159,7 +207,13 @@ const ticTacToeGame = (function(){
 
     })()
 
-    return { start: () => { console.log("game is starting"); display.initializeBoardDOM(); display.initializeRestartBtn(); logic.startGame() } }
+    function start (){
+        console.log("game is starting");
+        display.initializeChooseOpponentModal()
+        display.openChooseOpponentModal()
+    }
+
+    return { start }
 })()
 
 
